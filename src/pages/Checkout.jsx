@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../components/CartContext.jsx";
-
+import API_BASE_URL from "../api";
 function Checkout() {
   const {
     cart,
@@ -51,7 +51,7 @@ function Checkout() {
 
       // Send order to backend
       const response = await fetch(
-        "http://localhost:5000/api/orders",
+      `${API_BASE_URL}/api/orders`,
         {
           method: "POST",
           headers: {
