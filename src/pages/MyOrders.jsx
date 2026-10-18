@@ -206,6 +206,12 @@ function MyOrders() {
                         {item.name}
                       </h3>
 
+                      {item.size && (
+                        <p style={{ margin: "2px 0 6px", fontSize: "13px", color: "#a66a73", fontWeight: "600" }}>
+                          Size: {item.size}
+                        </p>
+                      )}
+
                       <p>
                         Quantity: {item.quantity}
                       </p>

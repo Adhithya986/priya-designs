@@ -21,17 +21,20 @@ export function CartProvider({ children }) {
     }
   }, [cart]);
 
-  function addToCart(product) {
+  function addToCart(product, size = "2.6") {
     if (Number(product.stock) <= 0) {
       alert("Sorry, this product is out of stock.");
       return;
     }
 
     const productId = String(product._id || product.id);
+    const chosenSize = size || product.size || "2.6";
 
     setCart((currentCart) => {
       const existingProduct = currentCart.find(
-        (item) => String(item._id || item.id) === productId
+        (item) =>
+          String(item._id || item.id) === productId &&
+          (item.size || "2.6") === chosenSize
       );
 
       if (existingProduct) {
@@ -46,7 +49,8 @@ export function CartProvider({ children }) {
         }
 
         return currentCart.map((item) =>
-          String(item._id || item.id) === productId
+          String(item._id || item.id) === productId &&
+          (item.size || "2.6") === chosenSize
             ? {
                 ...item,
                 quantity: item.quantity + 1,
@@ -62,10 +66,22 @@ export function CartProvider({ children }) {
           ...product,
           id: productId,
           _id: productId,
+          size: chosenSize,
           quantity: 1,
         },
       ];
     });
+  }
+
+  function updateItemSize(itemId, newSize) {
+    const idStr = String(itemId);
+    setCart((currentCart) =>
+      currentCart.map((item) =>
+        String(item.id || item._id) === idStr
+          ? { ...item, size: newSize }
+          : item
+      )
+    );
   }
 
   function removeFromCart(productId) {
@@ -147,6 +163,7 @@ export function CartProvider({ children }) {
         decreaseQuantity,
         cartCount,
         cartTotal,
+        updateItemSize,
       }}
     >
       {children}

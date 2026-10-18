@@ -8,6 +8,7 @@ function Checkout() {
     cart,
     cartTotal,
     clearCart,
+    updateItemSize,
   } = useCart();
 
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ function Checkout() {
     address: "",
     city: "",
     pincode: "",
+    bangleSize: "2.6",
   });
 
   const [loading, setLoading] = useState(false);
@@ -69,12 +71,13 @@ function Checkout() {
     try {
       setLoading(true);
 
-      // Prepare order items with robust ID matching
+      // Prepare order items with robust ID matching and size
       const items = cart.map((item) => ({
         productId: String(item._id || item.id),
         name: item.name,
         price: Number(item.price),
         quantity: Number(item.quantity),
+        size: item.size || form.bangleSize || "2.6",
         image: item.image || "",
       }));
 
@@ -114,12 +117,14 @@ function Checkout() {
       message += `*Customer:* ${form.name}%0A`;
       message += `*Phone:* ${form.phone}%0A`;
       message += `*Email:* ${form.email || "N/A"}%0A`;
-      message += `*Address:* ${form.address}, ${form.city} - ${form.pincode}%0A%0A`;
+      message += `*Address:* ${form.address}, ${form.city} - ${form.pincode}%0A`;
+      message += `*Preferred Bangle Size:* ${form.bangleSize || "2.6"}%0A%0A`;
 
       message += `*PRODUCTS*%0A`;
 
       cart.forEach((item) => {
-        message += `• ${item.name} x ${item.quantity} = ₹${
+        const itemSize = item.size || form.bangleSize || "2.6";
+        message += `• ${item.name} *(Size: ${itemSize})* x ${item.quantity} = ₹${
           item.price * item.quantity
         }%0A`;
       });
@@ -278,6 +283,36 @@ function Checkout() {
 
               </div>
 
+              <div className="form-group">
+                <label>Bangle Size</label>
+
+                <select
+                  name="bangleSize"
+                  value={form.bangleSize}
+                  onChange={(e) => {
+                    const newSize = e.target.value;
+                    handleChange(e);
+                    cart.forEach((it) => updateItemSize(it.id, newSize));
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    background: "#fff",
+                    fontSize: "14px",
+                    color: "#2b2020",
+                    outline: "none",
+                  }}
+                >
+                  <option value="2.2">2.2 (Small - 2.12" / 54mm)</option>
+                  <option value="2.4">2.4 (Medium - 2.25" / 57mm)</option>
+                  <option value="2.6">2.6 (Regular / Most Popular - 2.37" / 60mm)</option>
+                  <option value="2.8">2.8 (Large - 2.50" / 64mm)</option>
+                  <option value="2.10">2.10 (Extra Large - 2.62" / 67mm)</option>
+                </select>
+              </div>
+
               <div className="payment-box">
 
                 <h3>Payment Method</h3>
@@ -318,21 +353,60 @@ function Checkout() {
                 <div
                   className="checkout-item"
                   key={item.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "14px",
+                    padding: "12px 0",
+                    borderBottom: "1px solid #f0e6e4",
+                  }}
                 >
                   <img
                     src={item.image}
                     alt={item.name}
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      objectFit: "cover",
+                      borderRadius: "6px",
+                      border: "1px solid #eee",
+                    }}
                   />
 
-                  <div>
-                    <h3>{item.name}</h3>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: "14px", margin: "0 0 4px 0", color: "#2b2020" }}>
+                      {item.name}
+                    </h3>
 
-                    <p>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "12px", color: "#666" }}>Size:</span>
+                      <select
+                        value={item.size || form.bangleSize || "2.6"}
+                        onChange={(e) => updateItemSize(item.id, e.target.value)}
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: "4px",
+                          border: "1px solid #dfc9c4",
+                          fontSize: "12px",
+                          background: "#fff",
+                          cursor: "pointer",
+                          color: "#2b2020",
+                        }}
+                      >
+                        <option value="2.2">2.2 (Small)</option>
+                        <option value="2.4">2.4 (Medium)</option>
+                        <option value="2.6">2.6 (Regular)</option>
+                        <option value="2.8">2.8 (Large)</option>
+                        <option value="2.10">2.10 (XL)</option>
+                      </select>
+                    </div>
+
+                    <p style={{ margin: 0, fontSize: "12px", color: "#777" }}>
                       ₹{item.price} × {item.quantity}
                     </p>
                   </div>
 
-                  <strong>
+                  <strong style={{ fontSize: "14px", color: "#2b2020" }}>
                     ₹{item.price * item.quantity}
                   </strong>
                 </div>

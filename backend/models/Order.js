@@ -32,6 +32,10 @@ const orderSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
+      bangleSize: {
+        type: String,
+        default: "2.6",
+      },
     },
 
     items: [
@@ -53,6 +57,10 @@ const orderSchema = new mongoose.Schema(
           type: Number,
           required: true,
           min: 1,
+        },
+        size: {
+          type: String,
+          default: "2.6",
         },
         image: {
           type: String,

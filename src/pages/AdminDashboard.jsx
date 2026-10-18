@@ -1119,6 +1119,12 @@ function AdminDashboard() {
                                 {item.name}
                               </strong>
 
+                              {item.size && (
+                                <p style={{ margin: "2px 0", fontSize: "12px", color: "#a66a73", fontWeight: "600" }}>
+                                  Size: {item.size}
+                                </p>
+                              )}
+
                               <p>
                                 ₹{item.price} ×{" "}
                                 {item.quantity}

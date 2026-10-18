@@ -100,6 +100,7 @@ function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState("2.6");
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
@@ -185,7 +186,7 @@ function ProductDetails() {
     }
 
     for (let i = 0; i < quantity; i++) {
-      addToCart(product);
+      addToCart(product, selectedSize);
     }
 
     setAdded(true);
@@ -246,6 +247,39 @@ function ProductDetails() {
           </p>
 
           <div className="details-divider" />
+
+          {/* BANGLE SIZE */}
+          <div className="bangle-size-section" style={{ marginBottom: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "600", color: "#2b2020" }}>
+                Select Bangle Size: <strong style={{ color: "#a66a73" }}>{selectedSize}</strong>
+              </span>
+              <span style={{ fontSize: "12px", color: "#888" }}>Indian Size</span>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {["2.2", "2.4", "2.6", "2.8", "2.10"].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSelectedSize(s)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    border: selectedSize === s ? "2px solid #a66a73" : "1px solid #dfc9c4",
+                    background: selectedSize === s ? "#fff3f2" : "#ffffff",
+                    color: selectedSize === s ? "#a66a73" : "#2b2020",
+                    fontWeight: selectedSize === s ? "700" : "500",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* QUANTITY */}
 

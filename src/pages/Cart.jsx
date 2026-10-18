@@ -9,6 +9,7 @@ function Cart() {
     increaseQuantity,
     decreaseQuantity,
     removeFromCart,
+    updateItemSize,
   } = useCart();
 
   if (cart.length === 0) {
@@ -61,6 +62,29 @@ function Cart() {
                 <p>{item.category}</p>
 
                 <h3>{item.name}</h3>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "6px 0 10px" }}>
+                  <span style={{ fontSize: "13px", color: "#666" }}>Size:</span>
+                  <select
+                    value={item.size || "2.6"}
+                    onChange={(e) => updateItemSize(item.id, e.target.value)}
+                    style={{
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      border: "1px solid #dfc9c4",
+                      fontSize: "13px",
+                      background: "#fff",
+                      cursor: "pointer",
+                      color: "#2b2020",
+                    }}
+                  >
+                    <option value="2.2">2.2 (Small)</option>
+                    <option value="2.4">2.4 (Medium)</option>
+                    <option value="2.6">2.6 (Regular)</option>
+                    <option value="2.8">2.8 (Large)</option>
+                    <option value="2.10">2.10 (Extra Large)</option>
+                  </select>
+                </div>
 
                 <strong>
                   ₹{item.price}
