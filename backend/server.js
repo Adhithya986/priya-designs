@@ -30,19 +30,38 @@ app.get("/api/test", (req, res) => {
   });
 });
 
-// MongoDB Connection
+// Health check route
+app.get("/api/health", (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+  res.json({
+    status: "ok",
+    database: dbStatus,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Start Server and Connect to MongoDB
 async function startServer() {
+  // Start HTTP server first so Render port binding succeeds
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+
+  if (!process.env.MONGO_URI) {
+    console.error("❌ MONGO_URI environment variable is missing!");
+    return;
+  }
+
+  if (!process.env.JWT_SECRET) {
+    console.warn("⚠️ JWT_SECRET environment variable is not set. Authentication will fail!");
+  }
+
   try {
     await mongoose.connect(process.env.MONGO_URI);
-
     console.log("✅ MongoDB Connected Successfully");
-
-   app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
   } catch (error) {
-    console.error("❌ MongoDB Connection Failed");
-    console.error(error.message);
+    console.error("❌ MongoDB Connection Failed:", error.message);
+    console.error("👉 Please verify your MONGO_URI in Render's Environment settings and ensure 0.0.0.0/0 is whitelisted in MongoDB Atlas Network Access.");
   }
 }
 
