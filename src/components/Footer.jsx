@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Footer() {
   return (
     <footer className="site-footer">
@@ -23,10 +25,10 @@ function Footer() {
         <div className="footer-links">
           <h3>Quick Links</h3>
 
-          <a href="/home">Home</a>
-          <a href="/shop">Shop</a>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
+          <Link to="/home">Home</Link>
+          <Link to="/shop">Shop</Link>
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
         </div>
 
 
@@ -34,10 +36,10 @@ function Footer() {
         <div className="footer-links">
           <h3>Customer</h3>
 
-          <a href="/my-orders">My Orders</a>
-          <a href="/wishlist">Wishlist</a>
-          <a href="/cart">Cart</a>
-          <a href="/login">Login</a>
+          <Link to="/my-orders">My Orders</Link>
+          <Link to="/wishlist">Wishlist</Link>
+          <Link to="/cart">Cart</Link>
+          <Link to="/login">Login</Link>
         </div>
 
 
@@ -45,7 +47,7 @@ function Footer() {
         <div className="footer-contact">
           <h3>Contact Us</h3>
 
-          <p>📞 +91 99999 99999</p>
+          <p>📞 +91 63055 13540</p>
 
           <p>✉️ support@priyadesigns.com</p>
 

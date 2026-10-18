@@ -1,48 +1,89 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const WishlistContext = createContext();
 
 export function WishlistProvider({ children }) {
-  const [wishlist, setWishlist] = useState([]);
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem("priyaWishlist");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to load wishlist from storage", e);
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("priyaWishlist", JSON.stringify(wishlist));
+    } catch (e) {
+      console.error("Failed to save wishlist to storage", e);
+    }
+  }, [wishlist]);
 
   function addToWishlist(product) {
+    const productId = String(product._id || product.id);
+
     setWishlist((currentWishlist) => {
       const exists = currentWishlist.some(
-        (item) => item.id === product.id
+        (item) => String(item._id || item.id) === productId
       );
 
       if (exists) {
         return currentWishlist;
       }
 
-      return [...currentWishlist, product];
+      return [
+        ...currentWishlist,
+        {
+          ...product,
+          id: productId,
+          _id: productId,
+        },
+      ];
     });
   }
 
   function removeFromWishlist(productId) {
+    const pid = String(productId);
     setWishlist((currentWishlist) =>
-      currentWishlist.filter((item) => item.id !== productId)
+      currentWishlist.filter(
+        (item) => String(item._id || item.id) !== pid
+      )
     );
   }
 
   function toggleWishlist(product) {
+    const productId = String(product._id || product.id);
+
     setWishlist((currentWishlist) => {
       const exists = currentWishlist.some(
-        (item) => item.id === product.id
+        (item) => String(item._id || item.id) === productId
       );
 
       if (exists) {
         return currentWishlist.filter(
-          (item) => item.id !== product.id
+          (item) => String(item._id || item.id) !== productId
         );
       }
 
-      return [...currentWishlist, product];
+      return [
+        ...currentWishlist,
+        {
+          ...product,
+          id: productId,
+          _id: productId,
+        },
+      ];
     });
   }
 
   function isInWishlist(productId) {
-    return wishlist.some((item) => item.id === productId);
+    if (!productId) return false;
+    const pid = String(productId._id || productId.id || productId);
+    return wishlist.some(
+      (item) => String(item._id || item.id) === pid
+    );
   }
 
   const wishlistCount = wishlist.length;

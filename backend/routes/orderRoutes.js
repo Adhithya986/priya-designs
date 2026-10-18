@@ -4,6 +4,7 @@ const Product = require("../models/Product");
 
 const {
   authenticateToken,
+  optionalAuth,
   requireAdmin,
 } = require("../middleware/authMiddleware");
 
@@ -107,13 +108,12 @@ router.get(
 
 /* =========================================================
    CREATE ORDER + REDUCE STOCK
-   LOGGED-IN CUSTOMER
-   POST /api/orders
+   POST /api/orders (Logged-in customer or guest)
 ========================================================= */
 
 router.post(
   "/",
-  authenticateToken,
+  optionalAuth,
   async (req, res) => {
     try {
       const {
@@ -123,8 +123,8 @@ router.post(
         paymentMethod,
       } = req.body;
 
-      // Get logged-in user's ID from JWT
-      const userId = req.user.userId;
+      // Get logged-in user's ID from JWT if present, otherwise null for guest
+      const userId = req.user?.userId || null;
 
 
       /* -----------------------------------------------------

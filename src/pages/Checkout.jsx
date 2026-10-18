@@ -1,15 +1,21 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../components/CartContext.jsx";
 import API_BASE_URL from "../api";
+
 function Checkout() {
   const {
     cart,
     cartTotal,
-    removeFromCart,
+    clearCart,
   } = useCart();
 
   const navigate = useNavigate();
+
+  const token = localStorage.getItem("priyaToken");
+  const savedUser = JSON.parse(
+    localStorage.getItem("priyaUser") || "null"
+  );
 
   const [form, setForm] = useState({
     name: "",
@@ -21,6 +27,17 @@ function Checkout() {
   });
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (savedUser) {
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || savedUser.name || "",
+        email: prev.email || savedUser.email || "",
+        phone: prev.phone || savedUser.phone || "",
+      }));
+    }
+  }, []);
 
   function handleChange(e) {
     setForm({
@@ -40,24 +57,29 @@ function Checkout() {
     try {
       setLoading(true);
 
-      // Prepare order items
+      // Prepare order items with robust ID matching
       const items = cart.map((item) => ({
-        productId: item.id,
+        productId: String(item._id || item.id),
         name: item.name,
-        price: item.price,
-        quantity: item.quantity,
+        price: Number(item.price),
+        quantity: Number(item.quantity),
         image: item.image || "",
       }));
 
-      // Send order to backend
+      // Send order to backend (attach token if logged in)
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      if (token && token !== "null") {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch(
-      `${API_BASE_URL}/api/orders`,
+        `${API_BASE_URL}/api/orders`,
         {
           method: "POST",
-          headers: {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("priyaToken")}`,
-},
+          headers,
           body: JSON.stringify({
             customer: form,
             items,
@@ -82,13 +104,13 @@ function Checkout() {
       message += `*Order ID:* ${order._id}%0A`;
       message += `*Customer:* ${form.name}%0A`;
       message += `*Phone:* ${form.phone}%0A`;
-      message += `*Email:* ${form.email}%0A`;
+      message += `*Email:* ${form.email || "N/A"}%0A`;
       message += `*Address:* ${form.address}, ${form.city} - ${form.pincode}%0A%0A`;
 
       message += `*PRODUCTS*%0A`;
 
       cart.forEach((item) => {
-        message += `${item.name} x ${item.quantity} = ₹${
+        message += `• ${item.name} x ${item.quantity} = ₹${
           item.price * item.quantity
         }%0A`;
       });
@@ -96,16 +118,13 @@ function Checkout() {
       message += `%0A*Total: ₹${cartTotal}*%0A`;
       message += `*Payment:* Cash on Delivery`;
 
-      // Replace this with your actual WhatsApp number
       const whatsappNumber = "916305513540";
 
-      // Clear cart
-      cart.forEach((item) => {
-        removeFromCart(item.id);
-      });
+      // Clear cart reliably
+      clearCart();
 
       alert(
-        `Order placed successfully!%0AOrder ID: ${order._id}`
+        `Order placed successfully!\n\nOrder ID: ${order._id}\nTotal: ₹${cartTotal}\n\nA WhatsApp order summary will now open.`
       );
 
       // Open WhatsApp
@@ -114,7 +133,11 @@ function Checkout() {
         "_blank"
       );
 
-      navigate("/");
+      if (token) {
+        navigate("/my-orders");
+      } else {
+        navigate("/home");
+      }
     } catch (error) {
       console.error(error);
 

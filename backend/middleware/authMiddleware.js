@@ -36,6 +36,29 @@ function authenticateToken(req, res, next) {
   }
 }
 
+function optionalAuth(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      req.user = null;
+      return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (!token || token === "null" || token === "undefined") {
+      req.user = null;
+      return next();
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    req.user = null;
+    next();
+  }
+}
+
 function requireAdmin(req, res, next) {
   if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({
@@ -49,5 +72,6 @@ function requireAdmin(req, res, next) {
 
 module.exports = {
   authenticateToken,
+  optionalAuth,
   requireAdmin,
 };

@@ -5,15 +5,22 @@ import { useWishlist } from "./WishlistContext.jsx";
 function ProductCard({ product, onAddToCart }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  const liked = isInWishlist(product.id);
+  const productId = String(product._id || product.id);
+  const liked = isInWishlist(productId);
   const outOfStock = Number(product.stock) <= 0;
+
+  const normalizedProduct = {
+    ...product,
+    id: productId,
+    _id: productId,
+  };
 
   return (
     <div className="product-card">
 
       <div className="product-image">
 
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${productId}`}>
           <img src={product.image} alt={product.name} />
         </Link>
 
@@ -23,7 +30,7 @@ function ProductCard({ product, onAddToCart }) {
               ? "wishlist-button active"
               : "wishlist-button"
           }
-          onClick={() => toggleWishlist(product)}
+          onClick={() => toggleWishlist(normalizedProduct)}
         >
           <Heart
             size={19}
@@ -46,7 +53,7 @@ function ProductCard({ product, onAddToCart }) {
         </p>
 
         <Link
-          to={`/product/${product.id}`}
+          to={`/product/${productId}`}
           className="product-name-link"
         >
           <h3>{product.name}</h3>
@@ -73,7 +80,7 @@ function ProductCard({ product, onAddToCart }) {
                 : "add-cart-button"
             }
             disabled={outOfStock}
-            onClick={() => onAddToCart(product)}
+            onClick={() => onAddToCart(normalizedProduct)}
           >
             <ShoppingBag size={17} />
 

@@ -25,13 +25,7 @@ import { WishlistProvider } from "./components/WishlistContext";
 ========================================================= */
 
 function StartPage() {
-  const token = localStorage.getItem("priyaToken");
-
-  if (token) {
-    return <Navigate to="/home" replace />;
-  }
-
-  return <Navigate to="/login" replace />;
+  return <Navigate to="/home" replace />;
 }
 
 

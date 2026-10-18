@@ -45,37 +45,53 @@ function Home() {
 
         <div className="category-grid">
 
-          <div className="category-card">
+          <Link
+            to="/shop?category=Designer%20Bangles"
+            className="category-card"
+            style={{ textDecoration: "none", color: "inherit", display: "block" }}
+          >
             <div className="category-image">
               💍
             </div>
             <h3>Designer Bangles</h3>
             <p>Explore Collection</p>
-          </div>
+          </Link>
 
-          <div className="category-card">
+          <Link
+            to="/shop?category=Bridal%20Bangles"
+            className="category-card"
+            style={{ textDecoration: "none", color: "inherit", display: "block" }}
+          >
             <div className="category-image">
               👑
             </div>
             <h3>Bridal Bangles</h3>
             <p>Explore Collection</p>
-          </div>
+          </Link>
 
-          <div className="category-card">
+          <Link
+            to="/shop?category=Stone%20Bangles"
+            className="category-card"
+            style={{ textDecoration: "none", color: "inherit", display: "block" }}
+          >
             <div className="category-image">
               ✨
             </div>
             <h3>Stone Bangles</h3>
             <p>Explore Collection</p>
-          </div>
+          </Link>
 
-          <div className="category-card">
+          <Link
+            to="/shop?category=Bangle%20Sets"
+            className="category-card"
+            style={{ textDecoration: "none", color: "inherit", display: "block" }}
+          >
             <div className="category-image">
               🌸
             </div>
             <h3>Bangle Sets</h3>
             <p>Explore Collection</p>
-          </div>
+          </Link>
 
         </div>
 

@@ -1,9 +1,25 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = localStorage.getItem("priyaCart");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to load cart from storage", e);
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("priyaCart", JSON.stringify(cart));
+    } catch (e) {
+      console.error("Failed to save cart to storage", e);
+    }
+  }, [cart]);
 
   function addToCart(product) {
     if (Number(product.stock) <= 0) {
@@ -11,9 +27,11 @@ export function CartProvider({ children }) {
       return;
     }
 
+    const productId = String(product._id || product.id);
+
     setCart((currentCart) => {
       const existingProduct = currentCart.find(
-        (item) => item.id === product.id
+        (item) => String(item._id || item.id) === productId
       );
 
       if (existingProduct) {
@@ -24,12 +42,11 @@ export function CartProvider({ children }) {
           alert(
             `Only ${product.stock} items available in stock.`
           );
-
           return currentCart;
         }
 
         return currentCart.map((item) =>
-          item.id === product.id
+          String(item._id || item.id) === productId
             ? {
                 ...item,
                 quantity: item.quantity + 1,
@@ -43,6 +60,8 @@ export function CartProvider({ children }) {
         ...currentCart,
         {
           ...product,
+          id: productId,
+          _id: productId,
           quantity: 1,
         },
       ];
@@ -50,17 +69,28 @@ export function CartProvider({ children }) {
   }
 
   function removeFromCart(productId) {
+    const pid = String(productId);
     setCart((currentCart) =>
       currentCart.filter(
-        (item) => item.id !== productId
+        (item) => String(item._id || item.id) !== pid
       )
     );
   }
 
+  function clearCart() {
+    setCart([]);
+    try {
+      localStorage.removeItem("priyaCart");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   function increaseQuantity(productId) {
+    const pid = String(productId);
     setCart((currentCart) =>
       currentCart.map((item) => {
-        if (item.id !== productId) {
+        if (String(item._id || item.id) !== pid) {
           return item;
         }
 
@@ -68,7 +98,6 @@ export function CartProvider({ children }) {
           alert(
             `Only ${item.stock} items available in stock.`
           );
-
           return item;
         }
 
@@ -81,10 +110,11 @@ export function CartProvider({ children }) {
   }
 
   function decreaseQuantity(productId) {
+    const pid = String(productId);
     setCart((currentCart) =>
       currentCart
         .map((item) =>
-          item.id === productId
+          String(item._id || item.id) === pid
             ? {
                 ...item,
                 quantity: item.quantity - 1,
@@ -112,6 +142,7 @@ export function CartProvider({ children }) {
         cart,
         addToCart,
         removeFromCart,
+        clearCart,
         increaseQuantity,
         decreaseQuantity,
         cartCount,

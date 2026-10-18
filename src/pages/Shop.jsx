@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard.jsx";
 import { useCart } from "../components/CartContext.jsx";
 import API_BASE_URL from "../api";
+
 const categories = [
   "All",
   "Designer Bangles",
@@ -12,11 +14,19 @@ const categories = [
 
 function Shop() {
   const { addToCart } = useCart();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
 
   const [products, setProducts] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (categoryFromUrl && categories.includes(categoryFromUrl)) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
 
   async function fetchProducts() {
     try {
@@ -35,7 +45,16 @@ function Shop() {
         );
       }
 
-      setProducts(data.products);
+      const normalized = (data.products || []).map((p) => {
+        const id = String(p._id || p.id);
+        return {
+          ...p,
+          id,
+          _id: id,
+        };
+      });
+
+      setProducts(normalized);
     } catch (error) {
       console.error(error);
 
@@ -51,9 +70,17 @@ function Shop() {
     fetchProducts();
   }, []);
 
+  function handleCategoryClick(cat) {
+    setSelectedCategory(cat);
+    if (cat === "All") {
+      setSearchParams({});
+    } else {
+      setSearchParams({ category: cat });
+    }
+  }
+
   function handleAddToCart(product) {
     addToCart(product);
-
     alert(`${product.name} added to cart!`);
   }
 
@@ -93,7 +120,7 @@ function Shop() {
                 : "category-button"
             }
             onClick={() =>
-              setSelectedCategory(category)
+              handleCategoryClick(category)
             }
           >
             {category}

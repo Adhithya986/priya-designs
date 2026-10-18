@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ShoppingBag, Heart, ArrowLeft, Plus, Minus } from "lucide-react";
 import { useCart } from "../components/CartContext.jsx";
 import { useWishlist } from "../components/WishlistContext.jsx";
+import API_BASE_URL from "../api";
+
 const products = [
   {
     id: 1,
@@ -93,25 +95,81 @@ const products = [
 function ProductDetails() {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
-  const product = products.find(
-    (item) => item.id === Number(id)
-  );
-  const {
-  toggleWishlist,
-  isInWishlist
-} = useWishlist();
+  useEffect(() => {
+    async function loadProduct() {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
+        const data = await response.json();
 
-const liked = isInWishlist(product.id);
+        if (response.ok && data.success && data.product) {
+          const pid = String(data.product._id || data.product.id);
+          setProduct({
+            ...data.product,
+            id: pid,
+            _id: pid,
+          });
+          return;
+        }
+
+        // Check fallback products
+        const fallback = products.find((p) => String(p.id) === String(id));
+        if (fallback) {
+          setProduct({
+            ...fallback,
+            id: String(fallback.id),
+            _id: String(fallback.id),
+          });
+        } else {
+          setProduct(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch product from API", err);
+        const fallback = products.find((p) => String(p.id) === String(id));
+        if (fallback) {
+          setProduct({
+            ...fallback,
+            id: String(fallback.id),
+            _id: String(fallback.id),
+          });
+        } else {
+          setProduct(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (id) {
+      loadProduct();
+    }
+  }, [id]);
+
+  const liked = product ? isInWishlist(product.id || product._id) : false;
+  const outOfStock = product && Number(product.stock) <= 0;
+
+  if (loading) {
+    return (
+      <div className="page" style={{ textAlign: "center", padding: "80px 20px" }}>
+        <h2>Loading Product Details...</h2>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
-      <div className="page">
+      <div className="page" style={{ textAlign: "center", padding: "80px 20px" }}>
         <h1>Product Not Found</h1>
-
+        <p style={{ margin: "20px 0" }}>
+          The product you are looking for does not exist or has been removed.
+        </p>
         <Link to="/shop" className="shop-button">
           <ArrowLeft size={18} />
           BACK TO SHOP
@@ -121,6 +179,11 @@ const liked = isInWishlist(product.id);
   }
 
   function handleAddToCart() {
+    if (outOfStock) {
+      alert("This product is currently out of stock.");
+      return;
+    }
+
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
