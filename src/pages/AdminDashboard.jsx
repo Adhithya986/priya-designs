@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Upload, X, Check, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
 
 import API_BASE_URL from "../api";
 
@@ -44,6 +45,11 @@ function AdminDashboard() {
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   const [editingProduct, setEditingProduct] = useState(null);
+
+  const fileInputRef = useRef(null);
+  const [imageInputMode, setImageInputMode] = useState("file");
+  const [imageProcessing, setImageProcessing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [productForm, setProductForm] = useState({
     name: "",
@@ -120,6 +126,109 @@ function AdminDashboard() {
     });
   }
 
+  function compressAndConvertImage(file) {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith("image/")) {
+        reject(new Error("Please upload an image file (PNG, JPG, WEBP, etc.)"));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
+          const dataUrl = canvas.toDataURL(outputType, 0.85);
+          resolve(dataUrl);
+        };
+        img.onerror = () => reject(new Error("Failed to load image."));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error("Failed to read file."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setImageProcessing(true);
+      const dataUrl = await compressAndConvertImage(file);
+      setProductForm((prev) => ({
+        ...prev,
+        image: dataUrl,
+      }));
+    } catch (err) {
+      alert(err.message || "Failed to process image");
+    } finally {
+      setImageProcessing(false);
+    }
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    setIsDragging(true);
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault();
+    setIsDragging(false);
+  }
+
+  async function handleDrop(e) {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    try {
+      setImageProcessing(true);
+      const dataUrl = await compressAndConvertImage(file);
+      setProductForm((prev) => ({
+        ...prev,
+        image: dataUrl,
+      }));
+    } catch (err) {
+      alert(err.message || "Failed to process image");
+    } finally {
+      setImageProcessing(false);
+    }
+  }
+
+  function handleRemoveImage() {
+    setProductForm((prev) => ({
+      ...prev,
+      image: "",
+    }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
   function resetProductForm() {
     setProductForm({
       name: "",
@@ -131,6 +240,10 @@ function AdminDashboard() {
       description: "",
     });
 
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
     setEditingProduct(null);
   }
 
@@ -140,6 +253,11 @@ function AdminDashboard() {
 
   async function handleProductSubmit(e) {
     e.preventDefault();
+
+    if (!productForm.image) {
+      alert("Please upload a product image.");
+      return;
+    }
 
     try {
       const method = editingProduct ? "PUT" : "POST";
@@ -556,16 +674,113 @@ function AdminDashboard() {
             </div>
 
             <div className="form-group admin-full-width">
-              <label>Image URL</label>
+              <div className="admin-image-header">
+                <label>Product Image</label>
+                <div className="admin-image-mode-toggle">
+                  <button
+                    type="button"
+                    className={`image-mode-btn ${imageInputMode === "file" ? "active" : ""}`}
+                    onClick={() => setImageInputMode("file")}
+                  >
+                    <Upload size={13} /> Upload Image
+                  </button>
+                  <button
+                    type="button"
+                    className={`image-mode-btn ${imageInputMode === "url" ? "active" : ""}`}
+                    onClick={() => setImageInputMode("url")}
+                  >
+                    <LinkIcon size={13} /> Image URL
+                  </button>
+                </div>
+              </div>
 
-              <input
-                type="url"
-                name="image"
-                value={productForm.image}
-                onChange={handleProductChange}
-                placeholder="https://..."
-                required
-              />
+              {imageInputMode === "file" ? (
+                <div className="admin-file-upload-section">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handleFileSelect}
+                  />
+
+                  {productForm.image ? (
+                    <div className="admin-image-preview-card">
+                      <div className="preview-image-container">
+                        <img
+                          src={productForm.image}
+                          alt="Preview"
+                          className="preview-img"
+                        />
+                        <button
+                          type="button"
+                          className="remove-image-btn"
+                          onClick={handleRemoveImage}
+                          title="Remove image"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <div className="preview-info">
+                        <span className="preview-success">
+                          <Check size={14} /> Image ready
+                        </span>
+                        <button
+                          type="button"
+                          className="change-image-btn"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          Change Image
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className={`admin-upload-dropzone ${isDragging ? "dragging" : ""}`}
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      <div className="upload-icon-circle">
+                        <Upload size={22} />
+                      </div>
+                      <div className="upload-text">
+                        <strong>Click to upload image</strong> or drag and drop
+                      </div>
+                      <span className="upload-hint">
+                        PNG, JPG, WEBP, GIF (Auto-compressed)
+                      </span>
+                      {imageProcessing && (
+                        <div className="upload-processing">
+                          Optimizing image...
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="admin-url-input-container">
+                  <input
+                    type="url"
+                    name="image"
+                    value={productForm.image}
+                    onChange={handleProductChange}
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                  {productForm.image && (
+                    <div className="url-preview-thumb">
+                      <img
+                        src={productForm.image}
+                        alt="URL Preview"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="form-group admin-full-width">
