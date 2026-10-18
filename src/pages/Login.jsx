@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import API_BASE_URL from "../api";
+
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState({
     email: "",
@@ -49,11 +51,16 @@ function Login() {
 
       alert(`Welcome back, ${data.user.name}!`);
 
-     if (data.user.role === "admin") {
-  navigate("/admin");
-} else {
-  navigate("/home");
-}
+      if (data.user.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        const from = location.state?.from?.pathname;
+        if (from && from !== "/login" && from !== "/register") {
+          navigate(from, { replace: true });
+        } else {
+          navigate("/home", { replace: true });
+        }
+      }
     } catch (error) {
       console.error(error);
       alert(

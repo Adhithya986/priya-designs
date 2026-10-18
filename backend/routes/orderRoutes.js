@@ -108,12 +108,13 @@ router.get(
 
 /* =========================================================
    CREATE ORDER + REDUCE STOCK
-   POST /api/orders (Logged-in customer or guest)
+   LOGGED-IN CUSTOMER ONLY
+   POST /api/orders
 ========================================================= */
 
 router.post(
   "/",
-  optionalAuth,
+  authenticateToken,
   async (req, res) => {
     try {
       const {
@@ -123,8 +124,8 @@ router.post(
         paymentMethod,
       } = req.body;
 
-      // Get logged-in user's ID from JWT if present, otherwise null for guest
-      const userId = req.user?.userId || null;
+      // Get logged-in user's ID from JWT
+      const userId = req.user.userId;
 
 
       /* -----------------------------------------------------

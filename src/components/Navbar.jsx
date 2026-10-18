@@ -146,8 +146,22 @@ function Navbar() {
                 }
               }}
               aria-label="Account"
+              title={user?.name ? `${user.name} (${user.role})` : "Account"}
             >
               <User size={20} />
+            </button>
+          )}
+
+
+          {/* LOGOUT */}
+          {token && (
+            <button
+              className="nav-icon-button"
+              onClick={handleLogout}
+              aria-label="Logout"
+              title="Logout"
+            >
+              <LogOut size={20} />
             </button>
           )}
 

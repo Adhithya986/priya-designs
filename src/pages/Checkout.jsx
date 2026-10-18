@@ -29,6 +29,12 @@ function Checkout() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!token) {
+      alert("Please login to proceed with checkout.");
+      navigate("/login");
+      return;
+    }
+
     if (savedUser) {
       setForm((prev) => ({
         ...prev,
@@ -37,7 +43,7 @@ function Checkout() {
         phone: prev.phone || savedUser.phone || "",
       }));
     }
-  }, []);
+  }, [token, navigate]);
 
   function handleChange(e) {
     setForm({
@@ -48,6 +54,12 @@ function Checkout() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (!token) {
+      alert("Please login to place an order.");
+      navigate("/login");
+      return;
+    }
 
     if (cart.length === 0) {
       alert("Your cart is empty.");
@@ -66,14 +78,11 @@ function Checkout() {
         image: item.image || "",
       }));
 
-      // Send order to backend (attach token if logged in)
+      // Send order to backend (requires auth token)
       const headers = {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       };
-
-      if (token && token !== "null") {
-        headers.Authorization = `Bearer ${token}`;
-      }
 
       const response = await fetch(
         `${API_BASE_URL}/api/orders`,
@@ -133,11 +142,7 @@ function Checkout() {
         "_blank"
       );
 
-      if (token) {
-        navigate("/my-orders");
-      } else {
-        navigate("/home");
-      }
+      navigate("/my-orders");
     } catch (error) {
       console.error(error);
 

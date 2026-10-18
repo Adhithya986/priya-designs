@@ -21,11 +21,69 @@ import { WishlistProvider } from "./components/WishlistContext";
 
 
 /* =========================================================
+   AUTH GUARDS
+========================================================= */
+
+// Protect routes that require login
+function ProtectedRoute({ children }) {
+  const location = useLocation();
+  const token = localStorage.getItem("priyaToken");
+
+  if (!token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return children;
+}
+
+// Protect admin dashboard (requires login + admin role)
+function AdminRoute({ children }) {
+  const location = useLocation();
+  const token = localStorage.getItem("priyaToken");
+  const user = JSON.parse(localStorage.getItem("priyaUser") || "null");
+
+  if (!token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (user?.role !== "admin") {
+    return <Navigate to="/home" replace />;
+  }
+
+  return children;
+}
+
+// Routes only accessible when NOT logged in (Login & Register)
+function PublicRoute({ children }) {
+  const token = localStorage.getItem("priyaToken");
+  const user = JSON.parse(localStorage.getItem("priyaUser") || "null");
+
+  if (token) {
+    if (user?.role === "admin") {
+      return <Navigate to="/admin" replace />;
+    }
+    return <Navigate to="/home" replace />;
+  }
+
+  return children;
+}
+
+/* =========================================================
    START PAGE
 ========================================================= */
 
 function StartPage() {
-  return <Navigate to="/home" replace />;
+  const token = localStorage.getItem("priyaToken");
+  const user = JSON.parse(localStorage.getItem("priyaUser") || "null");
+
+  if (token) {
+    if (user?.role === "admin") {
+      return <Navigate to="/admin" replace />;
+    }
+    return <Navigate to="/home" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
 }
 
 
@@ -35,12 +93,14 @@ function StartPage() {
 
 function Layout() {
   const location = useLocation();
+  const token = localStorage.getItem("priyaToken");
 
   /*
-    Login, Register and Admin pages have their own layouts,
-    so Navbar/Footer are hidden there.
+    Login, Register, and Admin pages have their own layouts,
+    or user is not logged in, so Navbar/Footer are hidden.
   */
   const hideNavbar =
+    !token ||
     location.pathname === "/login" ||
     location.pathname === "/register" ||
     location.pathname === "/admin";
@@ -57,76 +117,124 @@ function Layout() {
           element={<StartPage />}
         />
 
-        {/* HOME */}
-        <Route
-          path="/home"
-          element={<Home />}
-        />
-
-        {/* SHOP */}
-        <Route
-          path="/shop"
-          element={<Shop />}
-        />
-
-        {/* ABOUT */}
-        <Route
-          path="/about"
-          element={<About />}
-        />
-
-        {/* CONTACT */}
-        <Route
-          path="/contact"
-          element={<Contact />}
-        />
-
         {/* LOGIN */}
         <Route
           path="/login"
-          element={<Login />}
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
         />
 
         {/* REGISTER */}
         <Route
           path="/register"
-          element={<Register />}
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+
+        {/* HOME */}
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* SHOP */}
+        <Route
+          path="/shop"
+          element={
+            <ProtectedRoute>
+              <Shop />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ABOUT */}
+        <Route
+          path="/about"
+          element={
+            <ProtectedRoute>
+              <About />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* CONTACT */}
+        <Route
+          path="/contact"
+          element={
+            <ProtectedRoute>
+              <Contact />
+            </ProtectedRoute>
+          }
         />
 
         {/* CART */}
         <Route
           path="/cart"
-          element={<Cart />}
+          element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          }
         />
 
         {/* WISHLIST */}
         <Route
           path="/wishlist"
-          element={<Wishlist />}
+          element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          }
         />
 
         {/* PRODUCT DETAILS */}
         <Route
           path="/product/:id"
-          element={<ProductDetails />}
+          element={
+            <ProtectedRoute>
+              <ProductDetails />
+            </ProtectedRoute>
+          }
         />
 
         {/* CHECKOUT */}
         <Route
           path="/checkout"
-          element={<Checkout />}
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
         />
 
         {/* MY ORDERS */}
         <Route
           path="/my-orders"
-          element={<MyOrders />}
+          element={
+            <ProtectedRoute>
+              <MyOrders />
+            </ProtectedRoute>
+          }
         />
 
         {/* ADMIN */}
         <Route
           path="/admin"
-          element={<AdminDashboard />}
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
         />
 
         {/* UNKNOWN PAGE */}

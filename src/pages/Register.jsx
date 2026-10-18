@@ -62,7 +62,7 @@ function Register() {
 
       alert("Registration successful! Welcome to Priya Designs.");
 
-      navigate("/");
+      navigate("/home");
     } catch (error) {
       console.error(error);
       alert(
